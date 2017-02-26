@@ -1,25 +1,39 @@
+/*!***************************************************************************
+@file    main.cpp
+@author  mc-w
+@date    2/25/2016
+@brief   Stack-based menu design for navigating in a console.
+
+@copyright "Don't be a Jerk" (See LICENSE.md)
+*****************************************************************************/
 #include "console-utils.hpp"
-#include "conio.h"
 #include <stack>
 #include <map>
 #include <string>
 #include <vector>
 
 
-
+//////////////////////////////////////////////////////
 // Registered series of lookups for menus to interact. Each entry includes the menu in question
 // represented as the name and a pointer to the container in question.
+//////////////////////////////////////////////////////
 class Container;
 class MenuRegistry
 {
 public:
-  // Static member funcs
-  static void Register(std::string str, Container *con) { registry_[str] = con;  }
+  // Register a specific key/containtainer association. Duplicate keys override eachother.
+  static void Register(std::string str, Container *con) 
+  { 
+    registry_[str] = con;  
+  }
+  
+  // Gets the container associted with the string key, returns null if it does not exist.
   static Container *GetContainer(std::string str)       
   { 
     auto iter = registry_.find(str); 
     if(iter != registry_.end())
       return registry_[str];
+
     return nullptr;
   }
 
@@ -27,12 +41,16 @@ private:
   // Private variables
   static std::map<std::string, Container *> registry_;
 };
+
+// Static init
 std::map<std::string, Container *> MenuRegistry::registry_ = std::map<std::string, Container *>();
 
 
 
+//////////////////////////////////////////////////////
 // Menu Container and associated struct. The basic idea is that you create a label and a destination
 // that allows menu navigation.
+//////////////////////////////////////////////////////
 struct Selectable
 {
   Selectable(std::string label, std::string target)
@@ -55,12 +73,33 @@ public:
   }
 
   // Member functions
-  void AddItem(std::string label, std::string target) { lineItems_.push_back(Selectable(label, target)); }
+  void AddItem(std::string label, std::string target) 
+  { 
+    lineItems_.push_back(Selectable(label, target)); 
+  }
+  
+  // Accessors
   std::vector<Selectable> &GetAllItems() { return lineItems_; }
-  Selectable GetSelected() { return lineItems_[selected_]; }
-  int IndexSelectionValue() { return selected_; }
-  void Next() { ++selected_; if(selected_ > lineItems_.size() - 1) selected_ = 0; }
-  void Prev() { --selected_; if(selected_ < 0) selected_ = lineItems_.size() - 1; }
+  Selectable GetSelected()               { return lineItems_[selected_]; }
+  size_t GetSelectedLine()               { return selected_; }
+  void SetSelectedLine(size_t line)      { selected_ = line; }
+
+  // Changes to next selection, with wrapping.
+  void Next() 
+  { 
+    ++selected_; 
+    if(selected_ > lineItems_.size() - 1) 
+      selected_ = 0; 
+  }
+
+  // Changes to previous selection, with wrapping.
+  void Prev() 
+  { 
+    if(selected_ == 0) 
+      selected_ = lineItems_.size() - 1; 
+    else
+      --selected_; 
+  }
 
 private:
   // Private ctor
@@ -71,14 +110,17 @@ private:
   {  }
 
   // Private variables
-  int selected_;
+  size_t selected_;
   std::string name_;
   std::vector<Selectable> lineItems_;
 };
 
 
 
-// Stack-based menu system.
+//////////////////////////////////////////////////////
+// Stack-based menu system. Uses a stack of different menu containers
+// to display the most recently navigated to on the top when draw is called.
+//////////////////////////////////////////////////////
 class MenuSystem
 {
 public:
@@ -95,6 +137,8 @@ public:
   // Member functions
   void Down() { stack_.top()->Next(); }
   void Up()   { stack_.top()->Prev(); }
+
+  // Selects the currently highlighted line from the menu on the top of the stack
   void Select() 
   {
     Container *c = MenuRegistry::GetContainer(stack_.top()->GetSelected().Target);
@@ -108,15 +152,17 @@ public:
     else
       stack_.push(c);
   }
+
+  // Draws the menu
   void Draw()
   {
     std::vector<Selectable> &v = stack_.top()->GetAllItems();
-    for(int i = 0; i < v.size(); ++i)
+    for(size_t i = 0; i < v.size(); ++i)
     {
-      if(i == stack_.top()->IndexSelectionValue())
-        RConsole::Canvas::DrawString(v[i].Label.c_str(), 3, i + 2, RConsole::LIGHTGREEN);
+      if(i == stack_.top()->GetSelectedLine())
+        RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(3), static_cast<float>(i + 2), RConsole::LIGHTGREEN);
       else
-        RConsole::Canvas::DrawString(v[i].Label.c_str(), 3, i + 2, RConsole::CYAN);
+        RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(3), static_cast<float>(i + 2), RConsole::CYAN);
     }
   }
 
