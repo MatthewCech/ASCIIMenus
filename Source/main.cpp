@@ -22,20 +22,20 @@ int main()
 
   // ====== Start menu init section ======
   Container *mainMenu = Container::Create("mainMenu");
-  mainMenu->SetOrientation(HORIZONTAL);
+  mainMenu->SetOrientation(ASCIIMenus::HORIZONTAL);
   mainMenu->AddItem("|  Mode select  |", "gamemode");
   mainMenu->AddItem("| Shopping List |", "shopping");
   mainMenu->AddItem("|     Exit      |", "exit");
 
   Container *gamemodeMenu = Container::Create("gamemode");
-  gamemodeMenu->SetOrientation(VERTICAL);
+  gamemodeMenu->SetOrientation(ASCIIMenus::VERTICAL);
   gamemodeMenu->SetPosition(0, 1);
   gamemodeMenu->AddItem("| Mode1 |", "");
   gamemodeMenu->AddItem("| Mode2 |", "");
   gamemodeMenu->AddItem("| Back  |", "back");
   
   Container *shoppingMenu = Container::Create("shopping");
-  shoppingMenu->SetOrientation(VERTICAL);
+  shoppingMenu->SetOrientation(ASCIIMenus::VERTICAL);
   shoppingMenu->SetPosition(17, 1);
   shoppingMenu->AddItem("| Carrots |", "");
   shoppingMenu->AddItem("|  Spam   |", "");
@@ -62,12 +62,20 @@ int main()
       case 's':
       case 'd':
       case 'D':
+      case KEY_DOWN:
+      case KEY_NUM_2:
+      case KEY_RIGHT:
+      case KEY_NUM_6:
         testBlock.Down();
         break;
       case 'W':
       case 'w':
       case 'a':
       case 'A':
+      case KEY_UP:
+      case KEY_NUM_8:
+      case KEY_LEFT:
+      case KEY_NUM_4:
         testBlock.Up();
         break;
       case KEY_SPACE:
@@ -77,7 +85,7 @@ int main()
       }
     }
 
-    testBlock.Draw(0,0);
+    testBlock.Draw(0,0, true);
     RConsole::Canvas::Update();
   }
 

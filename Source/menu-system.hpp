@@ -4,7 +4,7 @@
 @date    2/25/2016
 @brief   Stack-based menu design for navigating in a console.
 
-@copyright "Don't be a Jerk" (See LICENSE.md)
+@copyright (See LICENSE.md)
 *****************************************************************************/
 #include "console-utils.hpp"
 #include <stack>
@@ -12,12 +12,16 @@
 #include <string>
 #include <vector>
 
+namespace ASCIIMenus 
+{
+  enum ButtonState { SELECTED, NOT_SELECTED };
+  enum Orientation { HORIZONTAL, VERTICAL };
+}
 
 //////////////////////////////////////////////////////
 // Registered series of lookups for menus to interact. Each entry includes the menu in question
 // represented as the name and a pointer to the container in question.
 //////////////////////////////////////////////////////
-enum Orientation { HORIZONTAL, VERTICAL };
 class Container;
 class MenuRegistry
 {
@@ -80,17 +84,17 @@ public:
   }
   
   // Setter
-  void SetOrientation(Orientation o)   { orientation_ = o;  }
+  void SetOrientation(ASCIIMenus::Orientation o)   { orientation_ = o;  }
   void SetPosition(size_t x, size_t y) { x_ = x; y_ = y;    }
+  void SetSelectedLine(size_t line) { selected_ = line; }
 
   // Accessors
-  std::vector<Selectable> &GetAllItems() { return lineItems_; }
-  Selectable GetSelected()               { return lineItems_[selected_]; }
-  size_t GetSelectedLine()               { return selected_; }
-  Orientation GetOrientation()           { return orientation_; }
-  void SetSelectedLine(size_t line)      { selected_ = line; }
-  size_t GetXPos() { return x_; }
-  size_t GetYPos() { return y_; }
+  std::vector<Selectable> &GetAllItems()   { return lineItems_; }
+  ASCIIMenus::Orientation GetOrientation() { return orientation_; }
+  Selectable GetSelected()                 { return lineItems_[selected_]; }
+  size_t GetSelectedLine()                 { return selected_; }
+  size_t GetXPos()                         { return x_; }
+  size_t GetYPos()                         { return y_; }
 
 
   // Changes to next selection, with wrapping.
@@ -116,7 +120,7 @@ private:
     : selected_(0)
     , name_(menuName)
     , lineItems_()
-    , orientation_(Orientation::VERTICAL)
+    , orientation_(ASCIIMenus::Orientation::VERTICAL)
     , x_(0)
     , y_(0)
   {  }
@@ -125,7 +129,7 @@ private:
   size_t selected_;
   std::string name_;
   std::vector<Selectable> lineItems_;
-  Orientation orientation_;
+  ASCIIMenus::Orientation orientation_;
   size_t x_;
   size_t y_;
 };
@@ -139,7 +143,8 @@ private:
 class MenuSystem
 {
 private:
-  // Pushes a continer to the stack
+
+  // Pushes a continer to the stack if possible.
   void pushContainer(Container *c)
   {
     if (c == nullptr)
@@ -153,8 +158,19 @@ private:
       stack_.push(c);
   }
 
-public:
+  // Drawing a menu item at a location
+  void drawItem(size_t x, size_t y, std::string str, ASCIIMenus::ButtonState buttonState)
+  {
+    const RConsole::Color selectedColor = RConsole::LIGHTMAGENTA;
+    const RConsole::Color unselectedColor = RConsole::GREY;
 
+    if(buttonState == ASCIIMenus::NOT_SELECTED)
+      RConsole::Canvas::DrawString(str.c_str(), static_cast<float>(x), static_cast<float>(y), unselectedColor);
+    else if(buttonState == ASCIIMenus::SELECTED)
+      RConsole::Canvas::DrawString(str.c_str(), static_cast<float>(x), static_cast<float>(y), selectedColor);
+  }
+
+public:
   // Ctor
   MenuSystem(std::string initial)
     : stack_()
@@ -194,34 +210,75 @@ public:
   }
 
   // Draws the menu
-  void Draw(size_t x = 3, size_t y = 2)
+  void Draw(size_t x = 3, size_t y = 2, bool drawAll = false)
   {
+
     if (stack_.size() == 0)
       return;
 
-    std::vector<Selectable> &v = stack_.top()->GetAllItems();
-    Orientation o = stack_.top()->GetOrientation();
-    size_t xPos = stack_.top()->GetXPos();
-    size_t yPos = stack_.top()->GetYPos();
-    if (o == VERTICAL)
+    if(drawAll)
+      for (auto&& stackItem : stack_._Get_container())
+      {
+        const std::vector<Selectable> &v = stackItem->GetAllItems();
+        const ASCIIMenus::Orientation o = stackItem->GetOrientation();
+        const size_t xPos = stackItem->GetXPos();
+        const size_t yPos = stackItem->GetYPos();
+
+        // Vertical menus
+        if (o == ASCIIMenus::VERTICAL)
+        {
+          for (size_t i = 0; i < v.size(); ++i)
+          {
+            if (i == stackItem->GetSelectedLine())
+              drawItem(x + xPos, i + y + yPos, v[i].Label.c_str(), ASCIIMenus::SELECTED);
+            else
+              drawItem(x + xPos, i + y + yPos, v[i].Label.c_str(), ASCIIMenus::NOT_SELECTED);
+          }
+        }
+
+        // Horizontal Menus
+        else if (o == ASCIIMenus::HORIZONTAL)
+        {
+          size_t xOffset = 0;
+          for (size_t i = 0; i < v.size(); ++i)
+          {
+            if (i == stackItem->GetSelectedLine())
+              drawItem(xOffset + x + xPos, y + yPos, v[i].Label.c_str(), ASCIIMenus::SELECTED);
+            else
+              drawItem(xOffset + x + xPos, y + yPos, v[i].Label.c_str(), ASCIIMenus::NOT_SELECTED);
+            xOffset += v[i].Label.size();
+          }
+        }
+      }
+
+    // Create variables
+    const std::vector<Selectable> &v = stack_.top()->GetAllItems();
+    const ASCIIMenus::Orientation o = stack_.top()->GetOrientation();
+    const size_t xPos = stack_.top()->GetXPos();
+    const size_t yPos = stack_.top()->GetYPos();
+
+    // Vertical menus
+    if (o == ASCIIMenus::VERTICAL)
     {
       for (size_t i = 0; i < v.size(); ++i)
       {
         if (i == stack_.top()->GetSelectedLine())
-          RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(x + xPos), static_cast<float>(i + y + yPos), RConsole::LIGHTGREEN);
+          drawItem(x + xPos, i + y + yPos, v[i].Label.c_str(), ASCIIMenus::SELECTED);
         else
-          RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(x + xPos), static_cast<float>(i + y + yPos), RConsole::CYAN);
+          drawItem(x + xPos, i + y + yPos, v[i].Label.c_str(), ASCIIMenus::NOT_SELECTED);
       }
     }
-    else if (o == HORIZONTAL)
+
+    // Horizontal Menus
+    else if (o == ASCIIMenus::HORIZONTAL)
     {
       size_t xOffset = 0;
       for (size_t i = 0; i < v.size(); ++i)
       {
         if (i == stack_.top()->GetSelectedLine())
-          RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(xOffset + x + xPos), static_cast<float>(y + yPos), RConsole::LIGHTGREEN);
+          drawItem(xOffset + x + xPos, y + yPos, v[i].Label.c_str(), ASCIIMenus::SELECTED);
         else
-          RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(xOffset + x + xPos), static_cast<float>(y + yPos), RConsole::CYAN);
+          drawItem(xOffset + x + xPos, y + yPos, v[i].Label.c_str(), ASCIIMenus::NOT_SELECTED);
         xOffset += v[i].Label.size();
       }
     }
