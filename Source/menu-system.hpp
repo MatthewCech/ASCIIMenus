@@ -17,6 +17,7 @@
 // Registered series of lookups for menus to interact. Each entry includes the menu in question
 // represented as the name and a pointer to the container in question.
 //////////////////////////////////////////////////////
+enum Orientation { HORIZONTAL, VERTICAL };
 class Container;
 class MenuRegistry
 {
@@ -78,11 +79,19 @@ public:
     lineItems_.push_back(Selectable(label, target)); 
   }
   
+  // Setter
+  void SetOrientation(Orientation o)   { orientation_ = o;  }
+  void SetPosition(size_t x, size_t y) { x_ = x; y_ = y;    }
+
   // Accessors
   std::vector<Selectable> &GetAllItems() { return lineItems_; }
   Selectable GetSelected()               { return lineItems_[selected_]; }
   size_t GetSelectedLine()               { return selected_; }
+  Orientation GetOrientation()           { return orientation_; }
   void SetSelectedLine(size_t line)      { selected_ = line; }
+  size_t GetXPos() { return x_; }
+  size_t GetYPos() { return y_; }
+
 
   // Changes to next selection, with wrapping.
   void Next() 
@@ -107,12 +116,18 @@ private:
     : selected_(0)
     , name_(menuName)
     , lineItems_()
+    , orientation_(Orientation::VERTICAL)
+    , x_(0)
+    , y_(0)
   {  }
 
   // Private variables
   size_t selected_;
   std::string name_;
   std::vector<Selectable> lineItems_;
+  Orientation orientation_;
+  size_t x_;
+  size_t y_;
 };
 
 
@@ -139,6 +154,7 @@ private:
   }
 
 public:
+
   // Ctor
   MenuSystem(std::string initial)
     : stack_()
@@ -178,20 +194,39 @@ public:
   }
 
   // Draws the menu
-  void Draw()
+  void Draw(size_t x = 3, size_t y = 2)
   {
     if (stack_.size() == 0)
       return;
 
     std::vector<Selectable> &v = stack_.top()->GetAllItems();
-    for(size_t i = 0; i < v.size(); ++i)
+    Orientation o = stack_.top()->GetOrientation();
+    size_t xPos = stack_.top()->GetXPos();
+    size_t yPos = stack_.top()->GetYPos();
+    if (o == VERTICAL)
     {
-      if(i == stack_.top()->GetSelectedLine())
-        RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(3), static_cast<float>(i + 2), RConsole::LIGHTGREEN);
-      else
-        RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(3), static_cast<float>(i + 2), RConsole::CYAN);
+      for (size_t i = 0; i < v.size(); ++i)
+      {
+        if (i == stack_.top()->GetSelectedLine())
+          RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(x + xPos), static_cast<float>(i + y + yPos), RConsole::LIGHTGREEN);
+        else
+          RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(x + xPos), static_cast<float>(i + y + yPos), RConsole::CYAN);
+      }
+    }
+    else if (o == HORIZONTAL)
+    {
+      size_t xOffset = 0;
+      for (size_t i = 0; i < v.size(); ++i)
+      {
+        if (i == stack_.top()->GetSelectedLine())
+          RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(xOffset + x + xPos), static_cast<float>(y + yPos), RConsole::LIGHTGREEN);
+        else
+          RConsole::Canvas::DrawString(v[i].Label.c_str(), static_cast<float>(xOffset + x + xPos), static_cast<float>(y + yPos), RConsole::CYAN);
+        xOffset += v[i].Label.size();
+      }
     }
   }
+
 
   // Private variables
   std::stack<Container *> stack_;

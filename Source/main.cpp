@@ -22,22 +22,27 @@ int main()
 
   // ====== Start menu init section ======
   Container *mainMenu = Container::Create("mainMenu");
-  mainMenu->AddItem("> Mode select", "gamemode");
-  mainMenu->AddItem("> Shopping List", "shopping");
-  mainMenu->AddItem("exit", "exit");
+  mainMenu->SetOrientation(HORIZONTAL);
+  mainMenu->AddItem("|  Mode select  |", "gamemode");
+  mainMenu->AddItem("| Shopping List |", "shopping");
+  mainMenu->AddItem("|     Exit      |", "exit");
 
   Container *gamemodeMenu = Container::Create("gamemode");
-  gamemodeMenu->AddItem("> Mode1", "gamemode");
-  gamemodeMenu->AddItem("> Mode2", "");
-  gamemodeMenu->AddItem("back", "back");
+  gamemodeMenu->SetOrientation(VERTICAL);
+  gamemodeMenu->SetPosition(0, 1);
+  gamemodeMenu->AddItem("| Mode1 |", "");
+  gamemodeMenu->AddItem("| Mode2 |", "");
+  gamemodeMenu->AddItem("| Back  |", "back");
   
   Container *shoppingMenu = Container::Create("shopping");
-  shoppingMenu->AddItem("> Carrots", "");
-  shoppingMenu->AddItem("> Spam", "");
-  shoppingMenu->AddItem("> Chips", "");
-  shoppingMenu->AddItem("> Lettuce", "");
-  shoppingMenu->AddItem("> Oatmeal", "");
-  shoppingMenu->AddItem("back", "back");
+  shoppingMenu->SetOrientation(VERTICAL);
+  shoppingMenu->SetPosition(17, 1);
+  shoppingMenu->AddItem("| Carrots |", "");
+  shoppingMenu->AddItem("|  Spam   |", "");
+  shoppingMenu->AddItem("|  Chips  |", "");
+  shoppingMenu->AddItem("| Lettuce |", "");
+  shoppingMenu->AddItem("| Oatmeal |", "");
+  shoppingMenu->AddItem("|  Back   |", "back");
 
   MenuSystem testBlock("mainMenu");
   // ====== End menu init system ======
@@ -55,10 +60,14 @@ int main()
         break;
       case 'S':
       case 's':
+      case 'd':
+      case 'D':
         testBlock.Down();
         break;
       case 'W':
       case 'w':
+      case 'a':
+      case 'A':
         testBlock.Up();
         break;
       case KEY_SPACE:
@@ -68,7 +77,7 @@ int main()
       }
     }
 
-    testBlock.Draw();
+    testBlock.Draw(0,0);
     RConsole::Canvas::Update();
   }
 
