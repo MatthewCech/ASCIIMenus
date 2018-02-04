@@ -123,6 +123,21 @@ private:
 //////////////////////////////////////////////////////
 class MenuSystem
 {
+private:
+  // Pushes a continer to the stack
+  void pushContainer(Container *c)
+  {
+    if (c == nullptr)
+    {
+      if (stack_.top()->GetSelected().Target == "back")
+        stack_.pop();
+      else if (stack_.top()->GetSelected().Target == "exit")
+        exit(0);
+    }
+    else
+      stack_.push(c);
+  }
+
 public:
   // Ctor
   MenuSystem(std::string initial)
@@ -141,22 +156,25 @@ public:
   // Selects the currently highlighted line from the menu on the top of the stack
   void Select() 
   {
-    Container *c = MenuRegistry::GetContainer(stack_.top()->GetSelected().Target);
-    if(c == nullptr)
-    {
-      if(stack_.top()->GetSelected().Target == "back")
-        stack_.pop();
-      else if(stack_.top()->GetSelected().Target == "exit")
-        exit(0);
-    }
-    else
-      stack_.push(c);
+    pushContainer(MenuRegistry::GetContainer(stack_.top()->GetSelected().Target));
   }
 
-  // Goes back.
-  void Back() {
-    if(stack_.size() > 0)
+  // Indicate a specific menu to push via name.
+  void Select(std::string manualInput)
+  {
+    pushContainer(MenuRegistry::GetContainer(manualInput));
+
+  }
+
+  // Goes back. Returns if it did go back or not.
+  bool Back() {
+    if (stack_.size() > 0)
+    {
       stack_.pop();
+      return true;
+    }
+    
+    return false;
   }
 
   // Draws the menu
@@ -175,7 +193,6 @@ public:
     }
   }
 
-private:
   // Private variables
   std::stack<Container *> stack_;
 };

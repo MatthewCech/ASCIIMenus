@@ -50,7 +50,8 @@ int main()
       switch (c)
       {
       case KEY_ESCAPE:
-        testBlock.Back();
+        if (!testBlock.Back())
+          testBlock.Select("mainMenu");
         break;
       case 'S':
       case 's':
