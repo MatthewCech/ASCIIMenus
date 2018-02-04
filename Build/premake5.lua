@@ -9,13 +9,13 @@ local ROOT         = "../"          -- Path to project root
 
 
 -- [ WORKSPACE CONFIGURATION ] --
-workspace "Stack Menus"                      -- Solution Name
+workspace "Stack_Menus"                      -- Solution Name
     configurations { "Debug", "Release"}     -- Optimization/General config mode in VS
     platforms { "x64", "x86"}                -- Dropdown platforms section in VS
     location (ROOT .. "project_" .. _ACTION) -- Note: _ACTION is the argument passed to premake.
 
     -- [ PROJECT CONFIGURATION ] --
-    project "stackMenus"         -- Project name
+    project "StackMenus"         -- Project name
         targetname "stack_menus" -- Executable name
         kind "ConsoleApp"        -- Style of app in project- WindowedApp, ConsoleApp, etc.
         language "C++"
@@ -25,38 +25,35 @@ workspace "Stack Menus"                      -- Solution Name
 
     -- Generate filters with info provided for Visual Studio
     filter { "platforms:*86" }
-      architecture "x86"
+        architecture "x86"
     filter { "platforms:*64" }
-      architecture "x64"
+        architecture "x64"
 
     -- Generate configs dropdown info, VS
     filter { "configurations:Debug" }
-      defines { "DEBUG" }  -- Actively defined in code, can be checked for.
-      flags { "Symbols" }
+        defines { "DEBUG" }  -- Actively defined in code, can be checked for.
+        symbols "On"
     filter { "configurations:Release" }
-      defines { "NDEBUG" } -- Actively defined in code, can be checked for.
-      optimize "On"
+        defines { "NDEBUG" } -- Actively defined in code, can be checked for.
+        optimize "On"
 
     filter {} -- Reset filter.
 
     -- [ BUILD CONFIGURATIONS ] --
-    local cur_toolset = "default" -- workaround for premake issue #257
 
     filter {"system:macosx" } -- Mac uses clang.
-      toolset "clang"
-      cur_toolset = "clang"
+        toolset "clang"
    
     filter { "action:gmake" }
-      buildoptions { "-std=c++14" }
+        buildoptions { "-std=c++14" }
 
     -- Set the rpath on the executable, to allow for relative path for dynamic lib
-    filter { "system:macosx" }
-      if cur_toolset == "clang" or cur_toolset == "gcc" then  
+    filter { "system:macosx", "toolset:clang or gcc" }
         linkoptions { "-rpath @executable_path/lib" }
-      end
     
     filter {"system:windows", "action:vs*"}
-      linkoptions   { "/ignore:4099" }      -- Ignore library pdb warnings when running in debug
+        linkoptions   { "/ignore:4099" }      -- Ignore library pdb warnings when running in debug
+        systemversion("10.0.15063.0") -- windows 10 SDK
 
     filter {} -- clear filter   
 
@@ -65,13 +62,28 @@ workspace "Stack Menus"                      -- Solution Name
     local output_dir_root         = ROOT .. "bin_%{cfg.platform}_%{cfg.buildcfg}_" .. _ACTION
     local output_dir_lib          = output_dir_root .. "/libs" -- Mac Specific
     targetdir(output_dir_root)    -- Where all output files are stored
+    
+    -- All files that we're currently going to worry about 
     local source_dir_root         = ROOT .. "Source"
     local source_dir_includes     = ROOT .. "External" .. "/**/Includes"
-    local source_dir_libs         = ROOT .. "External" .. "/**/" .. "Libs_" .. os.get()
+    local source_dir_libs         = ROOT .. "External" .. "/**/" .. "Libs_" .. os.target()
+    local source_dir_dependencies = ROOT .. "External"
+
+
+	-- Includes and associated information directories 
+    local source_dir_includes     = source_dir_dependencies .. "/**/Includes"
+    local source_dir_libs         = source_dir_dependencies .. "/**/" .. "Libs_" .. os.target()
+    -- optional for libs that are 32 or 64 bit specific
+    local source_dir_libs32       = source_dir_libs .. "/lib_x32"
+    local source_dir_libs64       = source_dir_libs .. "/lib_x64"
+    -- additional asset locations
+    local resources_dir           = ROOT .. "Resources"
 
     -- Files to be compiled (cpp) or added to project (visual studio)
     files
     {
+      source_dir_root .. "/**.c",
+      source_dir_root .. "/**.h",
       source_dir_root .. "/**.cpp",
       source_dir_root .. "/**.hpp",
       source_dir_root .. "/**.tpp",
@@ -125,41 +137,4 @@ workspace "Stack Menus"                      -- Solution Name
       source_dir_libs .. "/lib_%{cfg.platform}/%{cfg.buildcfg}"  -- libs with BOTH x32/x64 AND Release/Debug versions (order reversed)
     }
 
-    --[[
-    -- OS-specific Libraries - Dynamic libs will need to be copied to output.
-    -- These are the configurations for windows and mac specifically, 
-    -- more can be added for linux.
-    filter { "system:windows", "platforms:*86" , "configurations:Debug" }   
-      links 
-      { 
-
-      }
-    filter { "system:windows", "platforms:*86" , "configurations:Release" } 
-      links 
-      { 
-
-      }
-    filter { "system:windows", "platforms:*64" , "configurations:Debug" }   
-      links 
-      { 
-
-      }
-    filter { "system:windows", "platforms:*64" , "configurations:Release" } 
-      links 
-      { 
-
-      }
- 
-      -- MAC INCLUDES, BEING DEBUG AND RELEASE. RECALL MAC IS ONLY 64-BIT
-    filter { "system:macosx", "configurations:Debug" }   
-      links 
-      { 
-
-      }
-    filter { "system:macosx", "configurations:Release" } 
-      links 
-      { 
-
-      }
-
-    filter {} --]]
+    filter {}
