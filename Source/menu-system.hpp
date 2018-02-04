@@ -153,9 +153,18 @@ public:
       stack_.push(c);
   }
 
+  // Goes back.
+  void Back() {
+    if(stack_.size() > 0)
+      stack_.pop();
+  }
+
   // Draws the menu
   void Draw()
   {
+    if (stack_.size() == 0)
+      return;
+
     std::vector<Selectable> &v = stack_.top()->GetAllItems();
     for(size_t i = 0; i < v.size(); ++i)
     {

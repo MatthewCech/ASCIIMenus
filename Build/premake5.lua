@@ -9,14 +9,14 @@ local ROOT         = "../"          -- Path to project root
 
 
 -- [ WORKSPACE CONFIGURATION ] --
-workspace "Boilerplate"                      -- Solution Name
+workspace "Stack Menus"                      -- Solution Name
     configurations { "Debug", "Release"}     -- Optimization/General config mode in VS
     platforms { "x64", "x86"}                -- Dropdown platforms section in VS
     location (ROOT .. "project_" .. _ACTION) -- Note: _ACTION is the argument passed to premake.
 
     -- [ PROJECT CONFIGURATION ] --
-    project "boilerplate"        -- Project name
-        targetname "boilerplate" -- Executable name
+    project "stackMenus"         -- Project name
+        targetname "stack_menus" -- Executable name
         kind "ConsoleApp"        -- Style of app in project- WindowedApp, ConsoleApp, etc.
         language "C++"
 

@@ -4,10 +4,12 @@
 @date    2/25/2016
 @brief   Stack-based menu design for navigating in a console.
 
-@copyright "Don't be a Jerk" (See LICENSE.md)
+@copyright See LICENSE.md
 *****************************************************************************/
 #include "menu-system.hpp"
 #include "conio.h"
+#include "console-input.h"
+
 
 // Application entry point. Note the order of events for menu initialization:
 // It requires you to establish a base menu along with a series of different
@@ -42,20 +44,26 @@ int main()
 
   while(1)
   {
-    if(_kbhit())
+    if(KeyHit())
     {
-      char c = _getch();
-      switch(c)
+      int c = GetChar();
+      switch (c)
       {
-        case 's':
-          testBlock.Down();
-          break;
-        case 'w':
-          testBlock.Up();
-          break;
-        case ' ':
-          testBlock.Select();
-          break;
+      case KEY_ESCAPE:
+        testBlock.Back();
+        break;
+      case 'S':
+      case 's':
+        testBlock.Down();
+        break;
+      case 'W':
+      case 'w':
+        testBlock.Up();
+        break;
+      case KEY_SPACE:
+      case KEY_ENTER:
+        testBlock.Select();
+        break;
       }
     }
 
