@@ -180,15 +180,14 @@ private:
 
 public:
   // Ctor
-  MenuSystem(std::string initial)
+  MenuSystem(std::string initial = "")
     : stack_()
     , colorSelected_(RConsole::MAGENTA)
     , colorUnselected_(RConsole::GREY)
-  { 
+  {
     Container *c = MenuRegistry::GetContainer(initial);
-    if(c == nullptr)
-      throw "Verify the strings used for the intial menu choice!";
-    stack_.push(c); 
+    if (c != nullptr)
+      stack_.push(c);
   }
   
   // Setters
