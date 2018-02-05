@@ -16,10 +16,9 @@
 // smaller sub-menus, or containers. 
 int main()
 {
-  
   // Pre-menu init
-  RConsole::Canvas::ReInit(60, 20);
-  RConsole::Canvas::SetCursorVisible(false);
+  ASCIIMenus::RConsole::Canvas::ReInit(60, 20);
+  ASCIIMenus::RConsole::Canvas::SetCursorVisible(false);
 
   // ====== Start menu init section ======
   Container *mainMenu = Container::Create("mainMenu");
@@ -46,8 +45,8 @@ int main()
   shoppingMenu->AddItem("|  Back   |", "back");
 
   MenuSystem testBlock("mainMenu");
-  testBlock.SetColorSelected(RConsole::LIGHTMAGENTA);
-  testBlock.SetColorUnselected(RConsole::GREY);
+  testBlock.SetColorSelected(ASCIIMenus::RConsole::LIGHTMAGENTA);
+  testBlock.SetColorUnselected(ASCIIMenus::RConsole::GREY);
   // ====== End menu init system ======
 
   while(1)
