@@ -10,12 +10,17 @@
 #include "conio.h"
 #include "console-input.h"
 
+void Shutdown() 
+{
+  exit(0);
+}
 
 // Application entry point. Note the order of events for menu initialization:
 // It requires you to establish a base menu along with a series of different
 // smaller sub-menus, or containers. 
 int main()
 {
+  
   // Pre-menu init
   RConsole::Canvas::ReInit(60, 20);
   RConsole::Canvas::SetCursorVisible(false);
@@ -25,7 +30,7 @@ int main()
   mainMenu->SetOrientation(ASCIIMenus::HORIZONTAL);
   mainMenu->AddItem("|  Mode select  |", "gamemode");
   mainMenu->AddItem("| Shopping List |", "shopping");
-  mainMenu->AddItem("|     Exit      |", "exit");
+  mainMenu->AddItem("|     Exit      |", "exit", Shutdown);
 
   Container *gamemodeMenu = Container::Create("gamemode");
   gamemodeMenu->SetOrientation(ASCIIMenus::VERTICAL);

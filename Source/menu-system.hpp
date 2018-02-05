@@ -14,6 +14,10 @@
 
 namespace ASCIIMenus 
 {
+  // Callback Functions
+  typedef void(*CallbackFunction)();
+
+  // Enums
   enum ButtonState { SELECTED, NOT_SELECTED };
   enum Orientation { HORIZONTAL, VERTICAL };
 }
@@ -58,13 +62,21 @@ std::map<std::string, Container *> MenuRegistry::registry_ = std::map<std::strin
 //////////////////////////////////////////////////////
 struct Selectable
 {
-  Selectable(std::string label, std::string target)
+  Selectable(std::string label, std::string target, ASCIIMenus::CallbackFunction function = nullptr)
     : Label(label)
     , Target(target)
+    , CallbackFunction(function)
   {  }
+
+  void Call()
+  {
+    if (CallbackFunction != nullptr)
+      CallbackFunction();
+  }
 
   std::string Label;
   std::string Target;
+  ASCIIMenus::CallbackFunction CallbackFunction;
 };
 class Container
 {
@@ -78,9 +90,9 @@ public:
   }
 
   // Member functions
-  void AddItem(std::string label, std::string target) 
+  void AddItem(std::string label, std::string target, ASCIIMenus::CallbackFunction function = nullptr) 
   { 
-    lineItems_.push_back(Selectable(label, target)); 
+    lineItems_.push_back(Selectable(label, target, function)); 
   }
   
   // Setter
@@ -147,12 +159,11 @@ private:
   // Pushes a continer to the stack if possible.
   void pushContainer(Container *c)
   {
+    stack_.top()->GetSelected().Call();
     if (c == nullptr)
     {
       if (stack_.top()->GetSelected().Target == "back")
         stack_.pop();
-      else if (stack_.top()->GetSelected().Target == "exit")
-        exit(0);
     }
     else
       stack_.push(c);
@@ -161,25 +172,28 @@ private:
   // Drawing a menu item at a location
   void drawItem(size_t x, size_t y, std::string str, ASCIIMenus::ButtonState buttonState)
   {
-    const RConsole::Color selectedColor = RConsole::LIGHTMAGENTA;
-    const RConsole::Color unselectedColor = RConsole::GREY;
-
     if(buttonState == ASCIIMenus::NOT_SELECTED)
-      RConsole::Canvas::DrawString(str.c_str(), static_cast<float>(x), static_cast<float>(y), unselectedColor);
+      RConsole::Canvas::DrawString(str.c_str(), static_cast<float>(x), static_cast<float>(y), colorUnselected_);
     else if(buttonState == ASCIIMenus::SELECTED)
-      RConsole::Canvas::DrawString(str.c_str(), static_cast<float>(x), static_cast<float>(y), selectedColor);
+      RConsole::Canvas::DrawString(str.c_str(), static_cast<float>(x), static_cast<float>(y), colorSelected_);
   }
 
 public:
   // Ctor
   MenuSystem(std::string initial)
     : stack_()
+    , colorSelected_(RConsole::MAGENTA)
+    , colorUnselected_(RConsole::GREY)
   { 
     Container *c = MenuRegistry::GetContainer(initial);
     if(c == nullptr)
       throw "Verify the strings used for the intial menu choice!";
     stack_.push(c); 
   }
+  
+  // Setters
+  void SetColorSelected(RConsole::Color c)   { colorSelected_ = c;   }
+  void SetColorUnselected(RConsole::Color c) { colorUnselected_ = c; }
   
   // Member functions
   void Down() { stack_.top()->Next(); }
@@ -188,14 +202,14 @@ public:
   // Selects the currently highlighted line from the menu on the top of the stack
   void Select() 
   {
-    pushContainer(MenuRegistry::GetContainer(stack_.top()->GetSelected().Target));
+    if(stack_.size() > 0)
+      pushContainer(MenuRegistry::GetContainer(stack_.top()->GetSelected().Target));
   }
 
   // Indicate a specific menu to push via name.
   void Select(std::string manualInput)
   {
     pushContainer(MenuRegistry::GetContainer(manualInput));
-
   }
 
   // Goes back. Returns if it did go back or not.
@@ -284,9 +298,11 @@ public:
     }
   }
 
-
+private:
   // Private variables
   std::stack<Container *> stack_;
+  RConsole::Color colorSelected_;
+  RConsole::Color colorUnselected_;
 };
 
 
