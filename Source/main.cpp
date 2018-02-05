@@ -10,10 +10,6 @@
 #include "conio.h"
 #include "console-input.h"
 
-void Shutdown() 
-{
-  exit(0);
-}
 
 // Application entry point. Note the order of events for menu initialization:
 // It requires you to establish a base menu along with a series of different
@@ -30,7 +26,7 @@ int main()
   mainMenu->SetOrientation(ASCIIMenus::HORIZONTAL);
   mainMenu->AddItem("|  Mode select  |", "gamemode");
   mainMenu->AddItem("| Shopping List |", "shopping");
-  mainMenu->AddItem("|     Exit      |", "exit", Shutdown);
+  mainMenu->AddItem("|     Exit      |", "exit", []() { exit(0); });
 
   Container *gamemodeMenu = Container::Create("gamemode");
   gamemodeMenu->SetOrientation(ASCIIMenus::VERTICAL);
@@ -50,6 +46,8 @@ int main()
   shoppingMenu->AddItem("|  Back   |", "back");
 
   MenuSystem testBlock("mainMenu");
+  testBlock.SetColorSelected(RConsole::LIGHTMAGENTA);
+  testBlock.SetColorUnselected(RConsole::GREY);
   // ====== End menu init system ======
 
   while(1)
